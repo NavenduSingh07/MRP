@@ -53,7 +53,7 @@ function getReqMaterials($conn, $model_id)
 // Function to fetch panels in process from panel_stock table
 function getPanelsInProcess($conn)
 {
-    $sql = "SELECT `ModelName`, `Quantity`, `timestamp` FROM `panel_stock` WHERE `statusID` = 1";
+    $sql = "SELECT `ModelName`, `Quantity`, `CName`, `timestamp` FROM `panel_stock` WHERE `statusID` = 1";
     $result = $conn->query($sql);
     $panels_in_process = array();
 
@@ -70,6 +70,7 @@ function getPanelsInProcess($conn)
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Retrieve the values from the form
     $model_name = $_POST['Model_Name'];
+    $CName = $_POST['CName'];    
     $quantity = $_POST['quantity'];
 
     // Retrieve the ID of the selected model
@@ -90,7 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
             }
             // Insert into panel_stock after the loop
-            $sql4 = "INSERT INTO `panel_stock` (`ModelName`, `Quantity`, `statusID`) VALUES ('$model_name', '$quantity', '1')";
+            $sql4 = "INSERT INTO `panel_stock` (`ModelName`, `CName`,`Quantity`, `statusID`) VALUES ('$model_name', '$CName', '$quantity', '1')";
             if ($conn->query($sql4) === false) {
                 echo "Error inserting into panel_stock: " . $conn->error;
             }
@@ -138,14 +139,14 @@ $panels_in_process = getPanelsInProcess($conn);
             </div>
         </nav>
     </header>
-    
+
     <main class="container mt-4">
         <h2 class="text-center">Choose Panel Type to Initiate Build</h2>
 
         <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
             <div class="mb-3">
                 <label for="Model_Name" class="form-label">Panel Model:</label>
-                <select name="Model_Name" id="Model_Name" class="form-select">
+                <select name="Model_Name" id="Model_Name" class="form-select" required>
                     <?php
                     $model_names = getModelNames($conn);
                     foreach ($model_names as $mname) {
@@ -154,10 +155,13 @@ $panels_in_process = getPanelsInProcess($conn);
                     ?>
                 </select>
             </div>
-
+            <div class="mb-3">
+        <label for="CName" class="form-label">Client Name:</label>
+        <input type="text" name="CName" id="CName" class="form-control" required>
+    </div>
             <div class="mb-3">
                 <label for="quantity" class="form-label">Quantity:</label>
-                <input type="number" name="quantity" id="quantity" class="form-control" min="1">
+                <input type="number" name="quantity" id="quantity" class="form-control" min="1" required>
             </div>
 
             <button type="submit" class="btn btn-danger">Initiate Build</button>
@@ -168,11 +172,12 @@ $panels_in_process = getPanelsInProcess($conn);
         <div class="container mt-5">
             <h2 class="text-center">Panels In Process</h2>
             <br>
-            <table class="table table-bordered table-primary table-hover">
+            <table class="table table-bordered table-primary">
                 <thead>
                     <tr class='table-danger'>
                         <th>SNo</th>
                         <th>Model Name</th>
+                        <th>Client Name</th>
                         <th>Quantity</th>
                         <th>Date Time</th>
                         <th>Record Damages</th>
@@ -195,6 +200,9 @@ $panels_in_process = getPanelsInProcess($conn);
                                 <?php echo $panel['ModelName']; ?>
                             </td>
                             <td>
+                                <?php echo $panel['CName']; ?>
+                            </td>
+                            <td>
                                 <?php echo $panel['Quantity']; ?>
                             </td>
                             <td>
@@ -213,6 +221,7 @@ $panels_in_process = getPanelsInProcess($conn);
                                     <form method="post" action="addpaneltoin.php">
                                         <!-- Hidden input fields to store data for the selected row -->
                                         <input type="hidden" name="modelName" value="<?php echo $panel['ModelName']; ?>">
+                                        <input type="hidden" name="CName" value="<?php echo $panel['CName']; ?>">
                                         <input type="hidden" name="quantity" value="<?php echo $panel['Quantity']; ?>">
                                         <input type="hidden" name="timestamp" value="<?php echo $panel['timestamp']; ?>">
                                         <!-- Button to trigger the form submission -->
@@ -285,7 +294,7 @@ $panels_in_process = getPanelsInProcess($conn);
         // Function to fetch panels manufactured from panel_stock table
         function getPanelsInStock($conn)
         {
-            $sql = "SELECT `SNo`, `ModelName`, `Quantity`, `timestamp` FROM `panel_stock` WHERE `statusID` = 2";
+            $sql = "SELECT `SNo`, `ModelName`, `CName`, `Quantity`, `timestamp` FROM `panel_stock` WHERE `statusID` = 2";
             $result = $conn->query($sql);
             $panels_in_stock = array();
 
@@ -304,11 +313,12 @@ $panels_in_process = getPanelsInProcess($conn);
 
         <h2 class="text-center">Panels Manufactured</h2>
         <br>
-        <table class="table table-bordered table-primary table-hover">
+        <table class="table table-bordered table-primary">
             <thead>
                 <tr class='table-danger'>
                     <th>SNo</th>
                     <th>Model Name</th>
+                    <th>Client Name</th>
                     <th>Quantity</th>
                     <th> Date Time</th>
                 </tr>
@@ -326,6 +336,9 @@ $panels_in_process = getPanelsInProcess($conn);
                         </td>
                         <td>
                             <?php echo $panel['ModelName']; ?>
+                        </td>
+                        <td>
+                            <?php echo $panel['CName']; ?>
                         </td>
                         <td>
                             <?php echo $panel['Quantity']; ?>
